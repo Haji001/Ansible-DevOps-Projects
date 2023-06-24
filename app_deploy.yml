@@ -1,0 +1,28 @@
+- name: CD and Application Configuration
+  hosts: AppMachines
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Pull repo
+      ansible.builtin.git:
+        repo: https://github.com/app/app.git
+        dest: /usr/apps
+        single_branch: yes
+        version: master
+        force: yes
+
+    - name: Install application dependencies
+      command: pip3 install -r /src/requirements/requirement.txt
+      environments:
+          PATH: "{{ ansible.env.PATH }}:/usr/local/bin"
+
+    - name: Configure environment variables
+      lineinfile:
+        path: /usr/apps
+        line: "APP_ENV=development"
+
+    - name: Restart application service
+      services:
+        name: nginx
+        state: restarted
